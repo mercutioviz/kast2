@@ -54,6 +54,8 @@ class PluginBase(abc.ABC):
         self.end_time = None
         self.raw_output = None
         self.results = None
+        self.dependencies: List[str] = []  # List of plugin names that must run first
+        self.concurrency_allowed: bool = True  # Default to allowing concurrency
         
         # Create output directory if it doesn't exist
         os.makedirs(output_dir, exist_ok=True)
@@ -127,6 +129,28 @@ class PluginBase(abc.ABC):
         """
         pass
     
+    @property
+    def dependencies(self) -> List[str]:
+        """Return list of plugin names that must run before this plugin."""
+        return self._dependencies
+
+    @dependencies.setter
+    def dependencies(self, deps: List[str]):
+        self._dependencies = deps
+
+    def run_if(self) -> bool:
+        """
+        Determine if the plugin should run.
+        Override in subclasses to add custom run conditions.
+        
+        Returns:
+            bool: True if plugin should run, False otherwise
+        """
+        if not self.run_if():
+            self.status = PluginStatus.NOT_STARTED
+        return self._format_results(error="Run conditions not met")
+        return True
+
     def run(self) -> Dict:
         """Execute the plugin and return results.
         
