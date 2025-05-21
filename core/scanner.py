@@ -38,39 +38,6 @@ class ScanOrchestrator:
         
         # Discover and load plugins
         self.plugins = self._discover_plugins()
-        
-    def _discover_plugins(self) -> List[Type[PluginBase]]:
-        """
-        Dynamically discover and load plugins from the plugins directory.
-        
-        Returns:
-            List of plugin classes
-        """
-        plugins = []
-        plugins_dir = os.path.join(os.path.dirname(__file__), '..', 'plugins')
-        
-        for plugin_name in os.listdir(plugins_dir):
-            plugin_path = os.path.join(plugins_dir, plugin_name)
-            
-            # Skip non-directories and __init__.py
-            if not os.path.isdir(plugin_path) or plugin_name.startswith('__'):
-                continue
-            
-            try:
-                # Dynamically import the plugin module
-                module = importlib.import_module(f'plugins.{plugin_name}.plugin')
-                
-                # Find and add plugin classes
-                for name, obj in module.__dict__.items():
-                    if (isinstance(obj, type) and 
-                        issubclass(obj, PluginBase) and 
-                        obj is not PluginBase):
-                        plugins.append(obj)
-                
-            except ImportError as e:
-                self.logger.error(f"Could not import plugin {plugin_name}: {e}")
-        
-        return plugins
     
     def _resolve_dependencies(self, plugins: List[Type[PluginBase]]) -> List[Type[PluginBase]]:
         """
